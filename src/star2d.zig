@@ -3,6 +3,47 @@ const rl = @import("raylib");
 const u = @import("utils.zig");
 const m = @import("main.zig");
 
+stars: [500]Star = undefined,
+width: u32 = 320,
+height: u32 = 200,
+
+const Self = @This();
+
+pub fn new() Self {
+    var me = Self{};
+    for (0..me.stars.len) |i|
+        me.stars[i] = Star.new(me.width, me.height);
+    return me;
+}
+
+const Effect = @import("effect.zig");
+pub fn interface(self: *Self) Effect {
+    return .{
+        .impl = @ptrCast(self),
+        .drawFn = draw,
+        .widthFn = width,
+        .heightFn = height,
+    };
+}
+
+pub fn width(self_opaque: *anyopaque) u32 {
+    const self: *Self = @ptrCast(@alignCast(self_opaque));
+    return self.width;
+}
+
+pub fn height(self_opaque: *anyopaque) u32 {
+    const self: *Self = @ptrCast(@alignCast(self_opaque));
+    return self.height;
+}
+
+pub fn draw(self_opaque: *anyopaque) void {
+    var self: *Self = @ptrCast(@alignCast(self_opaque));
+    for (0..self.stars.len) |i| {
+        self.stars[i].update();
+        self.stars[i].draw();
+    }
+}
+
 const Star = struct {
     screenWidth: u32,
     screenHeight: u32,
@@ -39,25 +80,5 @@ const Star = struct {
     pub fn draw(self: Star) void {
         const gray = ((256 / maxPlanes) * self.p);
         rl.drawPixel(@intCast(self.x), @intCast(self.y), rl.Color.init(gray, gray, gray, 255));
-    }
-};
-
-pub const Stars = struct {
-    stars: [500]Star = undefined,
-    screenWidth: u32 = 320,
-    screenHeight: u32 = 200,
-
-    pub fn draw(self: *Stars) void {
-        for (0..self.stars.len) |i| {
-            self.stars[i].update();
-            self.stars[i].draw();
-        }
-    }
-
-    pub fn new() Stars {
-        var me = Stars{};
-        for (0..me.stars.len) |i|
-            me.stars[i] = Star.new(me.screenWidth, me.screenHeight);
-        return me;
     }
 };

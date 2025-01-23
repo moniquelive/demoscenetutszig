@@ -1,5 +1,7 @@
 const rl = @import("raylib");
+const Effect = @import("effect.zig");
 const star2d = @import("star2d.zig");
+const std = @import("std");
 
 const screenWidth = 800;
 const screenHeight = 500;
@@ -12,11 +14,12 @@ pub fn main() !void {
 
     rl.setTargetFPS(60);
 
-    //-------------------------------------------------- create our stars ---
-    var stars = star2d.Stars.new();
+    //------------------------------------------------- create the effect ---
+    var s2d = star2d.new();
+    const fx = s2d.interface();
 
     //------------------------------------- create our off screen texture ---
-    var target = try rl.loadRenderTexture(@intCast(stars.screenWidth), @intCast(stars.screenHeight));
+    var target = try rl.loadRenderTexture(@intCast(fx.width()), @intCast(fx.height()));
     defer rl.unloadRenderTexture(target);
 
     while (!rl.windowShouldClose()) { // Detect window close button or ESC key
@@ -26,7 +29,7 @@ pub fn main() !void {
         //----------------------------------------- draw over our texture ---
         target.begin();
         rl.clearBackground(rl.Color.black);
-        stars.draw();
+        fx.draw();
         target.end();
 
         //--------------------------- stretch our texture over the window ---

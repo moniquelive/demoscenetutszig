@@ -6,13 +6,12 @@ const screenWidth = 800;
 const screenHeight = 500;
 pub const windowBounds = rl.Rectangle.init(1, 1, screenWidth - 1, screenHeight - 1);
 
+var buff: [1024 * 1024]u8 = undefined;
+var fba = std.heap.FixedBufferAllocator.init(&buff);
+
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer std.debug.assert(.ok == gpa.deinit());
-
-    var arena = std.heap.ArenaAllocator.init(gpa.allocator());
+    var arena = std.heap.ArenaAllocator.init(fba.allocator());
     defer arena.deinit();
-
     const allocator = arena.allocator();
 
     rl.initWindow(screenWidth, screenHeight, "DemosceneZig");
@@ -21,8 +20,7 @@ pub fn main() !void {
     rl.setTargetFPS(60);
 
     //------------------------------------------------- create the effect ---
-    const typ = effect.Types.star2d;
-    const fx = try effect.newEffect(allocator, typ);
+    const fx = try effect.new(allocator, "star2d");
 
     //------------------------------------- create our off screen texture ---
     var target = try rl.loadRenderTexture(@intCast(fx.width()), @intCast(fx.height()));

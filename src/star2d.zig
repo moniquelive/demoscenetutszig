@@ -1,43 +1,23 @@
 const std = @import("std");
 const rl = @import("raylib");
 const u = @import("utils.zig");
-const m = @import("main.zig");
+const windowBounds = @import("main.zig").windowBounds;
 
-stars: [500]Star = undefined,
-width: u32 = 320,
-height: u32 = 200,
+stars: [500]Star,
+width: u32,
+height: u32,
 
 const Self = @This();
 
-pub fn new() Self {
-    var me = Self{};
-    for (0..me.stars.len) |i|
-        me.stars[i] = Star.new(me.width, me.height);
-    return me;
+pub fn init(self: *Self) *Self {
+    self.width = 320;
+    self.height = 200;
+    for (0..self.stars.len) |i|
+        self.stars[i] = Star.new(self.width, self.height);
+    return self;
 }
 
-const Effect = @import("effect.zig");
-pub fn interface(self: *Self) Effect {
-    return .{
-        .impl = @ptrCast(self),
-        .drawFn = draw,
-        .widthFn = width,
-        .heightFn = height,
-    };
-}
-
-pub fn width(self_opaque: *anyopaque) u32 {
-    const self: *Self = @ptrCast(@alignCast(self_opaque));
-    return self.width;
-}
-
-pub fn height(self_opaque: *anyopaque) u32 {
-    const self: *Self = @ptrCast(@alignCast(self_opaque));
-    return self.height;
-}
-
-pub fn draw(self_opaque: *anyopaque) void {
-    var self: *Self = @ptrCast(@alignCast(self_opaque));
+pub fn draw(self: *Self) void {
     for (0..self.stars.len) |i| {
         self.stars[i].update();
         self.stars[i].draw();
@@ -45,35 +25,39 @@ pub fn draw(self_opaque: *anyopaque) void {
 }
 
 const Star = struct {
-    screenWidth: u32,
-    screenHeight: u32,
+    canvasWidth: u32,
+    canvasHeight: u32,
     x: u32,
     y: u32,
     p: u8,
     xVel: f32,
+    minxVel: f32,
+    maxxVel: f32,
 
     const maxPlanes = 50;
     const rand = std.crypto.random;
-    pub fn new(w: u32, h: u32) Star {
+    pub fn new(width: u32, height: u32) Star {
         return Star{
-            .screenWidth = w,
-            .screenHeight = h,
-            .x = rand.uintLessThan(u32, w),
-            .y = rand.uintLessThan(u32, h),
+            .canvasWidth = width,
+            .canvasHeight = height,
+            .x = rand.uintLessThan(u32, width),
+            .y = rand.uintLessThan(u32, height),
             .p = rand.uintLessThan(u8, maxPlanes),
             .xVel = 0,
+            .minxVel = 0.01,
+            .maxxVel = 0.1,
         };
     }
     pub fn update(self: *Star) void {
         const pos = rl.getMousePosition();
-        if (rl.checkCollisionPointRec(pos, m.windowBounds)) {
-            self.xVel = u.map(pos.x, 0, @floatFromInt(self.screenWidth), 0.01, 0.1);
+        if (rl.checkCollisionPointRec(pos, windowBounds)) {
+            self.xVel = u.map(pos.x, 0, @floatFromInt(self.canvasWidth), self.minxVel, self.maxxVel);
         }
 
         self.x += @intFromFloat(@as(f32, @floatFromInt(1 + self.p)) * self.xVel);
-        if (self.x >= self.screenWidth) {
+        if (self.x >= self.canvasWidth) {
             self.x = 0;
-            self.y = rand.uintLessThan(u32, self.screenHeight);
+            self.y = rand.uintLessThan(u32, self.canvasHeight);
         }
     }
 

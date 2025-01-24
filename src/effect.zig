@@ -1,19 +1,34 @@
-impl: *anyopaque,
+const std = @import("std");
+const Star2d = @import("star2d.zig");
 
-drawFn: *const fn (*anyopaque) void,
-widthFn: *const fn (*anyopaque) u32,
-heightFn: *const fn (*anyopaque) u32,
+pub const Types = enum {
+    star2d,
+};
 
-const Self = @This();
-
-pub fn draw(iface: *const Self) void {
-    return iface.drawFn(iface.impl);
+pub fn newEffect(allocator: std.mem.Allocator, typ: Types) !Effect {
+    return switch (typ) {
+        .star2d => Effect{ .star2d = (try allocator.create(Star2d)).init() },
+    };
 }
 
-pub fn width(iface: *const Self) u32 {
-    return iface.widthFn(iface.impl);
-}
+pub const Effect = union(Types) {
+    star2d: *Star2d,
 
-pub fn height(iface: *const Self) u32 {
-    return iface.heightFn(iface.impl);
-}
+    pub fn draw(effect: Effect) void {
+        return switch (effect) {
+            .star2d => |s| s.draw(),
+        };
+    }
+
+    pub fn width(effect: Effect) u32 {
+        return switch (effect) {
+            .star2d => |s| s.width,
+        };
+    }
+
+    pub fn height(effect: Effect) u32 {
+        return switch (effect) {
+            .star2d => |s| s.height,
+        };
+    }
+};

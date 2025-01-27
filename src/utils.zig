@@ -19,4 +19,8 @@ test map {
     }
     try t.expectEqual(map(0.5, 0, 1, 0, 1), 0.5);
     try t.expectEqual(map(0.5, 0, 1, 0, 0), 0);
+
+    try t.expectEqual(0.01, map(0, 0, 320, 0.01, 0.1));
+    try t.expectEqual(0.055, map(160, 0, 320, 0.01, 0.1));
+    try t.expectEqual(0.1, map(320, 0, 320, 0.01, 0.1));
 }

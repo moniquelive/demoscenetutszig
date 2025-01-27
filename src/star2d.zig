@@ -11,18 +11,21 @@ pub const Main = struct {
     width: u32,
     height: u32,
 
-    pub fn init(m: *Main) *Main {
-        m.width = width;
-        m.height = height;
-        for (0..m.stars.len) |i|
-            m.stars[i] = Star.new();
+    pub fn init() Main {
+        var m = Main{
+            .stars = undefined,
+            .width = width,
+            .height = height,
+        };
+        for (&m.stars) |*s|
+            s.* = Star.init();
         return m;
     }
 
     pub fn draw(self: *Main) void {
-        for (0..self.stars.len) |i| {
-            self.stars[i].update();
-            self.stars[i].draw();
+        for (&self.stars) |*s| {
+            s.update();
+            s.draw();
         }
     }
 };
@@ -37,7 +40,7 @@ const Star = struct {
 
     const maxPlanes = 50;
     const rand = std.crypto.random;
-    pub fn new() Star {
+    pub fn init() Star {
         return Star{
             .x = rand.float(f32) * width + 1,
             .y = rand.float(f32) * height + 1,
@@ -50,7 +53,7 @@ const Star = struct {
     pub fn update(self: *Star) void {
         const pos = rl.getMousePosition();
         if (rl.checkCollisionPointRec(pos, windowBounds)) {
-            self.xVel = u.map(pos.x, 0, width, self.minxVel, self.maxxVel);
+            self.xVel = u.map(pos.x, 0, windowBounds.width, self.minxVel, self.maxxVel);
         }
 
         self.x += self.p * self.xVel;
@@ -62,6 +65,6 @@ const Star = struct {
 
     pub fn draw(self: Star) void {
         const gray: u8 = @intFromFloat((256 / maxPlanes) * self.p);
-        rl.drawPixel(@intFromFloat(self.x), @intFromFloat(self.y), rl.Color.init(gray, gray, gray, 255));
+        rl.drawPixel(@intFromFloat(self.x), @intFromFloat(self.y), rl.Color.init(255, 255, 255, gray));
     }
 };

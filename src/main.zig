@@ -1,26 +1,19 @@
 const std = @import("std");
 const rl = @import("raylib");
-const effect = @import("effect.zig");
+const Effect = @import("effect.zig").Effect;
 
 const screenWidth = 800;
 const screenHeight = 500;
 pub const windowBounds = rl.Rectangle.init(1, 1, screenWidth - 1, screenHeight - 1);
 
-var buff: [1024 * 1024]u8 = undefined;
-var fba = std.heap.FixedBufferAllocator.init(&buff);
-
 pub fn main() !void {
-    var arena = std.heap.ArenaAllocator.init(fba.allocator());
-    defer arena.deinit();
-    const allocator = arena.allocator();
-
     rl.initWindow(screenWidth, screenHeight, "DemosceneZig");
     defer rl.closeWindow();
 
     rl.setTargetFPS(60);
 
     //------------------------------------------------- create the effect ---
-    const fx = try effect.new(allocator, "star2d");
+    var fx = try Effect.new("star2d");
 
     //------------------------------------- create our off screen texture ---
     var target = try rl.loadRenderTexture(@intCast(fx.width()), @intCast(fx.height()));

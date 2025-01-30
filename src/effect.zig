@@ -18,9 +18,7 @@ pub const Effect = union(enum) {
 
     pub fn draw(effect: *Effect) void {
         switch (effect.*) {
-            inline else => |*f| {
-                f.draw();
-            },
+            inline else => |*f| f.draw(),
         }
     }
 

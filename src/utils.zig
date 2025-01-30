@@ -2,7 +2,7 @@ const std = @import("std");
 const t = std.testing;
 
 /// Maps a number in a range to another
-pub fn map(n: f32, from: f32, to: f32, new_from: f32, new_to: f32) f32 {
+pub inline fn map(n: f32, from: f32, to: f32, new_from: f32, new_to: f32) f32 {
     return (n - from) / (to - from) * (new_to - new_from) + new_from;
 }
 

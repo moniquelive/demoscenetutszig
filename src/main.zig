@@ -35,3 +35,7 @@ pub fn main() !void {
         rl.drawTexturePro(target.texture, src, dst, rl.Vector2.zero(), 0, rl.Color.white);
     }
 }
+
+test {
+    _ = @import("utils.zig");
+}

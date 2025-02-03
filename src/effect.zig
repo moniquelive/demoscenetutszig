@@ -1,14 +1,17 @@
 const std = @import("std");
-const Star2d = @import("star2d.zig").Main;
+const Star2d = @import("fx/star2d.zig").Main;
+const Star3d = @import("fx/star3d.zig").Main;
 
 pub const Effect = union(enum) {
     star2d: Star2d,
+    star3d: Star3d,
 
     pub fn new(name: []const u8) !Effect {
         inline for (std.meta.fields(Effect)) |field| {
             if (std.mem.eql(u8, field.name, name)) {
                 return switch (field.type) {
                     Star2d => Effect{ .star2d = Star2d.init() },
+                    Star3d => Effect{ .star3d = Star3d.init() },
                     else => error.NotFound,
                 };
             }

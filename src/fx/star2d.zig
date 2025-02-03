@@ -1,7 +1,6 @@
 const std = @import("std");
 const rl = @import("raylib");
-const u = @import("utils.zig");
-const windowBounds = @import("main.zig").windowBounds;
+const windowBounds = @import("../main.zig").windowBounds;
 
 const width = 320;
 const height = 200;
@@ -53,7 +52,7 @@ const Star = struct {
     pub fn update(self: *Star) void {
         const pos = rl.getMousePosition();
         if (rl.checkCollisionPointRec(pos, windowBounds)) {
-            self.xVel = u.map(pos.x, 0, windowBounds.width, self.minxVel, self.maxxVel);
+            self.xVel = rl.math.remap(pos.x, 0, windowBounds.width, self.minxVel, self.maxxVel);
         }
 
         self.x += self.p * self.xVel;

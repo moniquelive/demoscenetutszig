@@ -22,7 +22,7 @@ pub fn main() !void {
     rl.setTargetFPS(60);
 
     //------------------------------------------------- create the effect ---
-    var fx = try Effect.new("star3d");
+    var fx = try Effect.new("crossfade");
 
     //------------------------------------- create our off screen texture ---
     var target = try rl.loadRenderTexture(@intCast(fx.width()), @intCast(fx.height()));

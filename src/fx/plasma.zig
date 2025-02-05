@@ -3,9 +3,8 @@
 /// https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_04_Per_Pixel_Control.shtml
 const std = @import("std");
 const rl = @import("raylib");
-const windowBounds = @import("../main.zig").windowBounds;
 
-const bgBytes = @embedFile("plasma.raw");
+const pi_over_128 = std.math.pi / 128.0;
 
 pub const Main = struct {
     const Self = @This();
@@ -17,37 +16,41 @@ pub const Main = struct {
     plasma1: [256_000]u8,
     plasma2: [256_000]u8,
 
-    inline fn f1(i: f32, j: f32) u8 {
-        return @intFromFloat(64.0 + 63.0 * std.math.sin(std.math.hypot(200 - j, 320 - i) / 16.0));
+    inline fn f1(x: f32, y: f32) u7 {
+        const hypo = std.math.hypot(200.0 - y, 320.0 - x);
+        const sin = std.math.sin(hypo / 16.0);
+        return @intFromFloat(64.0 + 63.0 * sin);
     }
-    inline fn f2(i: f32, j: f32) u8 {
-        return @intFromFloat(64.0 + 63.0 * std.math.sin(i / (37.0 + 15.0 * std.math.cos(j / 74.0))) * std.math.cos(j / (31.0 + 11.0 * std.math.sin(i / 57.0))));
+    inline fn f2(x: f32, y: f32) u7 {
+        const sin = std.math.sin(x / (37.0 + 15.0 * std.math.cos(y / 74.0)));
+        const cos = std.math.cos(y / (31.0 + 11.0 * std.math.sin(x / 57.0)));
+        return @intFromFloat(64.0 + 63.0 * sin * cos);
     }
     pub fn init() Self {
-        var plasma1: [256000]u8 = undefined;
+        var plasma1: [256_000]u8 = undefined;
         for (0..400) |j| {
             for (0..640) |i| plasma1[640 * j + i] = f1(@floatFromInt(i), @floatFromInt(j));
         }
 
-        var plasma2: [256000]u8 = undefined;
+        var plasma2: [256_000]u8 = undefined;
         for (0..400) |j| {
             for (0..640) |i| plasma2[640 * j + i] = f2(@floatFromInt(i), @floatFromInt(j));
         }
 
         return Self{
-            .bg = bgBytes,
+            .bg = @embedFile("plasma.raw"),
             .plasma1 = plasma1,
             .plasma2 = plasma2,
         };
     }
     pub fn draw(self: *Self) void {
-        const time = rl.getTime() * 100;
+        // animation speed
+        const time = rl.getTime() * 150;
 
         // update the palette
         var colors: [256]rl.Color = undefined;
         for (0..colors.len) |i| {
             const fi: f32 = @floatFromInt(i);
-            const pi_over_128 = std.math.pi / 128.0;
             const r: u8 = @intFromFloat(128 + 127 * std.math.cos(fi * pi_over_128 + time / 74.0));
             const g: u8 = @intFromFloat(128 + 127 * std.math.sin(fi * pi_over_128 + time / 63.0));
             const b: u8 = @intFromFloat(128 - 127 * std.math.cos(fi * pi_over_128 + time / 81.0));
@@ -65,9 +68,9 @@ pub const Main = struct {
 
         for (0..200) |j| {
             for (0..320) |i| {
-                const src1 = self.plasma1[640 * @as(usize, @intCast(j + y1)) + @as(usize, @intCast(i + x1))];
-                const src2 = self.plasma2[640 * @as(usize, @intCast(j + y2)) + @as(usize, @intCast(i + x2))];
-                const src3 = self.plasma2[640 * @as(usize, @intCast(j + y3)) + @as(usize, @intCast(i + x3))];
+                const src1 = self.plasma1[640 * (j + y1) + i + x1];
+                const src2 = self.plasma2[640 * (j + y2) + i + x2];
+                const src3 = self.plasma2[640 * (j + y3) + i + x3];
                 const c: u8 = self.bg[320 * j + i] +% src1 +% src2 +% src3;
                 rl.drawPixel(@intCast(i), @intCast(j), colors[c]);
             }

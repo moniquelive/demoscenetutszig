@@ -22,7 +22,12 @@ pub fn main() !void {
     rl.setTargetFPS(60);
 
     //------------------------------------------------- create the effect ---
-    var fx = try Effect.new("plasma");
+    var buffer: [1024]u8 = undefined;
+    var ba = std.heap.FixedBufferAllocator.init(&buffer);
+    const args = try std.process.argsAlloc(ba.allocator());
+    defer std.process.argsFree(ba.allocator(), args);
+    const fxName = if (args.len > 1) args[1] else "plasma";
+    var fx = try Effect.new(fxName);
 
     //------------------------------------- create our off screen texture ---
     var target = try rl.loadRenderTexture(@intCast(fx.width()), @intCast(fx.height()));

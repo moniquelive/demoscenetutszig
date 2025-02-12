@@ -9,9 +9,12 @@ pub const windowBounds = rl.Rectangle.init(1, 1, screenWidth - 1, screenHeight -
 pub fn drawFps() void {
     var text: [4:0]u8 = .{0} ** 4;
     const fps = rl.getFPS();
-    text[0] = '0' + @as(u8, @intCast(@mod(@divFloor(fps, 100), 10)));
-    text[1] = '0' + @as(u8, @intCast(@mod(@divFloor(fps, 10), 10)));
-    text[2] = '0' + @as(u8, @intCast(@mod(@divFloor(fps, 1), 10)));
+    text[0] = @intCast(@mod(@divFloor(fps, 100), 10));
+    text[1] = @intCast(@mod(@divFloor(fps, 10), 10));
+    text[2] = @intCast(@mod(@divFloor(fps, 1), 10));
+    text[0] += '0';
+    text[1] += '0';
+    text[2] += '0';
     rl.drawText(&text, 10, 10, 12, rl.Color.white);
 }
 
@@ -26,7 +29,7 @@ pub fn main() !void {
     var ba = std.heap.FixedBufferAllocator.init(&buffer);
     const args = try std.process.argsAlloc(ba.allocator());
     defer std.process.argsFree(ba.allocator(), args);
-    const fxName = if (args.len > 1) args[1] else "plasma";
+    const fxName = if (args.len > 1) args[1] else "filters";
     var fx = try Effect.new(fxName);
 
     //------------------------------------- create our off screen texture ---

@@ -4,8 +4,6 @@
 const std = @import("std");
 const rl = @import("raylib");
 
-const pi_over_128 = std.math.pi / 128.0;
-
 pub const Main = struct {
     const Self = @This();
 
@@ -19,24 +17,23 @@ pub const Main = struct {
     fire1: [64_000]u8 = [_]u8{0} ** 64_000,
     fire2: [64_000]u8 = [_]u8{0} ** 64_000,
 
-    count: usize = 0,
-
     inline fn shade_pal(colors: *[256]rl.Color, s: i32, e: i32, r1: i32, g1: i32, b1: i32, r2: i32, g2: i32, b2: i32) void {
         const d = e - s;
         for (0..(d + 1)) |i| {
             const fi: f32 = @floatFromInt(i);
             const fd: f32 = @floatFromInt(d);
             const k = fi / fd;
-            const rr: u8 = @intFromFloat(@mulAdd(f32, (r2 - r1), k, r1));
-            const gg: u8 = @intFromFloat(@mulAdd(f32, (g2 - g1), k, g1));
-            const bb: u8 = @intFromFloat(@mulAdd(f32, (b2 - b1), k, b1));
-            colors[s + i] = rl.Color.init(rr, gg, bb, 255);
+            const r: u8 = @intFromFloat(@mulAdd(f32, (r2 - r1), k, r1));
+            const g: u8 = @intFromFloat(@mulAdd(f32, (g2 - g1), k, g1));
+            const b: u8 = @intFromFloat(@mulAdd(f32, (b2 - b1), k, b1));
+            colors[s + i] = rl.Color.init(r, g, b, 255);
         }
     }
 
     pub fn init() Self {
         const bgBytes = @embedFile("filter.png");
-        const img_bg = rl.loadImageFromMemory(".png", bgBytes) catch unreachable;
+        var bg_img = rl.loadImageFromMemory(".png", bgBytes) catch unreachable;
+        bg_img.grayscale();
 
         var colors: [256]rl.Color = undefined;
         shade_pal(&colors, 0, 23, 0, 0, 0, 0, 0, 127);
@@ -46,10 +43,27 @@ pub const Main = struct {
         shade_pal(&colors, 128, 255, 255, 255, 255, 255, 255, 255);
 
         return Self{
-            .bg = img_bg,
+            .bg = bg_img,
             .colors = colors,
         };
     }
+
+    pub fn draw(self: *Self) void {
+        defer self.flip = !self.flip;
+        self.heat();
+        self.blur_up();
+
+        var offs: usize = 0;
+        const src = if (!self.flip) &self.fire1 else &self.fire2;
+        for (0..197) |j| {
+            for (0..320) |i| {
+                const c: u8 = src[offs];
+                offs += 1;
+                rl.drawPixel(@intCast(i), @intCast(j + 3), self.colors[c]);
+            }
+        }
+    }
+
     const rand = std.crypto.random;
     fn heat(self: *Self) void {
         var dst = if (self.flip) &self.fire1 else &self.fire2;
@@ -62,6 +76,7 @@ pub const Main = struct {
             dst[63040 + rand.intRangeAtMost(usize, 0, 960 - 1)] = 255;
         }
     }
+
     fn blur_up(self: *Self) void {
         const src = if (self.flip) &self.fire1 else &self.fire2;
         const dst = if (self.flip) &self.fire2 else &self.fire1;
@@ -94,21 +109,5 @@ pub const Main = struct {
         }
         // clear the last 2 lines
         @memset(dst[offs..], 0);
-    }
-    pub fn draw(self: *Self) void {
-        defer self.count += 1;
-        defer self.flip = !self.flip;
-        self.heat();
-        self.blur_up();
-
-        var offs: usize = 0;
-        const src = if (!self.flip) &self.fire1 else &self.fire2;
-        for (0..197) |j| {
-            for (0..320) |i| {
-                const c: u8 = src[offs];
-                offs += 1;
-                rl.drawPixel(@intCast(i), @intCast(j + 3), self.colors[c]);
-            }
-        }
     }
 };

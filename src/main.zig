@@ -29,7 +29,7 @@ pub fn main() !void {
     var ba = std.heap.FixedBufferAllocator.init(&buffer);
     const args = try std.process.argsAlloc(ba.allocator());
     defer std.process.argsFree(ba.allocator(), args);
-    const fxName = if (args.len > 1) args[1] else "filters";
+    const fxName = if (args.len > 1) args[1] else "cyber1";
     var fx = try Effect.new(fxName);
 
     //------------------------------------- create our off screen texture ---

@@ -11,7 +11,7 @@ pub const Main = struct {
     height: u32 = 200,
 
     bg: rl.Image,
-    colors: [256]rl.Color,
+    colors: [256]rl.Color = undefined,
     flip: bool = true,
 
     fire1: [64_000]u8 = [_]u8{0} ** 64_000,
@@ -31,21 +31,13 @@ pub const Main = struct {
     }
 
     pub fn init() Self {
-        const bgBytes = @embedFile("filter.png");
-        var bg_img = rl.loadImageFromMemory(".png", bgBytes) catch unreachable;
-        bg_img.grayscale();
-
-        var colors: [256]rl.Color = undefined;
-        shade_pal(&colors, 0, 23, 0, 0, 0, 0, 0, 127);
-        shade_pal(&colors, 24, 47, 0, 0, 127, 255, 0, 0);
-        shade_pal(&colors, 48, 63, 255, 0, 0, 255, 255, 0);
-        shade_pal(&colors, 64, 127, 255, 255, 0, 255, 255, 255);
-        shade_pal(&colors, 128, 255, 255, 255, 255, 255, 255, 255);
-
-        return Self{
-            .bg = bg_img,
-            .colors = colors,
-        };
+        var s = Self{ .bg = rl.loadImageFromMemory(".png", @embedFile("filter.png")) catch unreachable };
+        shade_pal(&s.colors, 0, 23, 0, 0, 0, 0, 0, 127);
+        shade_pal(&s.colors, 24, 47, 0, 0, 127, 255, 0, 0);
+        shade_pal(&s.colors, 48, 63, 255, 0, 0, 255, 255, 0);
+        shade_pal(&s.colors, 64, 127, 255, 255, 0, 255, 255, 255);
+        shade_pal(&s.colors, 128, 255, 255, 255, 255, 255, 255, 255);
+        return s;
     }
 
     pub fn draw(self: *Self) void {

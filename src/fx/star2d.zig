@@ -6,22 +6,20 @@ const width = 320;
 const height = 200;
 
 pub const Main = struct {
-    stars: [500]Star,
-    width: u32,
-    height: u32,
+    const Self = @This();
 
-    pub fn init() Main {
-        var m = Main{
-            .stars = undefined,
-            .width = width,
-            .height = height,
-        };
-        for (&m.stars) |*s|
-            s.* = Star.init();
-        return m;
+    stars: [500]Star,
+    width: u32 = width,
+    height: u32 = height,
+
+    pub fn init() Self {
+        var s = Self{ .stars = undefined };
+        for (0..s.stars.len) |i|
+            s.stars[i] = Star.init();
+        return s;
     }
 
-    pub fn draw(self: *Main) void {
+    pub fn draw(self: *Self) void {
         for (&self.stars) |*s| {
             s.update();
             s.draw();
@@ -33,9 +31,9 @@ const Star = struct {
     x: f32,
     y: f32,
     p: f32,
-    xVel: f32,
-    minxVel: f32,
-    maxxVel: f32,
+    xVel: f32 = 0,
+    minxVel: f32 = 0.01,
+    maxxVel: f32 = 0.1,
 
     const maxPlanes = 50;
     const rand = std.crypto.random;
@@ -44,9 +42,6 @@ const Star = struct {
             .x = rand.float(f32) * width + 1,
             .y = rand.float(f32) * height + 1,
             .p = rand.float(f32) * maxPlanes + 1,
-            .xVel = 0,
-            .minxVel = 0.01,
-            .maxxVel = 0.1,
         };
     }
     pub fn update(self: *Star) void {

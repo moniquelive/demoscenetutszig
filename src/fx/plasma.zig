@@ -13,8 +13,8 @@ pub const Main = struct {
     height: u32 = 200,
 
     bg: *const [64_000:0]u8,
-    plasma1: [256_000]u8,
-    plasma2: [256_000]u8,
+    plasma1: [256_000]u8 = undefined,
+    plasma2: [256_000]u8 = undefined,
 
     inline fn f1(x: f32, y: f32) u7 {
         const hypo = std.math.hypot(200.0 - y, 320.0 - x);
@@ -27,21 +27,14 @@ pub const Main = struct {
         return @intFromFloat(64.0 + 63.0 * sin * cos);
     }
     pub fn init() Self {
-        var plasma1: [256_000]u8 = undefined;
+        comptime var s = Self{ .bg = @embedFile("plasma.raw") };
         for (0..400) |j| {
-            for (0..640) |i| plasma1[640 * j + i] = f1(@floatFromInt(i), @floatFromInt(j));
+            for (0..640) |i| s.plasma1[640 * j + i] = f1(@floatFromInt(i), @floatFromInt(j));
         }
-
-        var plasma2: [256_000]u8 = undefined;
         for (0..400) |j| {
-            for (0..640) |i| plasma2[640 * j + i] = f2(@floatFromInt(i), @floatFromInt(j));
+            for (0..640) |i| s.plasma2[640 * j + i] = f2(@floatFromInt(i), @floatFromInt(j));
         }
-
-        return Self{
-            .bg = @embedFile("plasma.raw"),
-            .plasma1 = plasma1,
-            .plasma2 = plasma2,
-        };
+        return s;
     }
     pub fn draw(self: *Self) void {
         // animation speed

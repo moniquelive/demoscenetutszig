@@ -6,21 +6,20 @@ const width = 320;
 const height = 200;
 
 pub const Main = struct {
-    stars: [500]Star,
-    width: u32,
-    height: u32,
+    const Self = @This();
 
-    pub fn init() Main {
-        var m = Main{
-            .stars = undefined,
-            .width = width,
-            .height = height,
-        };
-        for (&m.stars) |*s|
-            s.* = Star.init();
-        return m;
+    stars: [500]Star,
+    width: u32 = width,
+    height: u32 = height,
+
+    pub fn init() Self {
+        comptime var s = Self{ .stars = undefined };
+        for (0..s.stars.len) |i|
+            s.stars[i] = Star.init();
+        return s;
     }
-    pub fn draw(self: *Main) void {
+
+    pub fn draw(self: *Self) void {
         for (&self.stars) |*s| {
             s.update();
             s.draw();
@@ -33,12 +32,11 @@ const Star = struct {
 
     const rand = std.crypto.random;
     pub fn init() Star {
-        const pos = rl.Vector3.init(
+        return Star{ .pos = rl.Vector3.init(
             rand.float(f32) * width - width / 2.0,
             rand.float(f32) * height - height / 2.0,
             rand.float(f32) * width + 1,
-        );
-        return Star{ .pos = pos };
+        ) };
     }
 
     pub fn update(self: *Star) void {

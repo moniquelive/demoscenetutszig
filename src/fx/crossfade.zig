@@ -6,9 +6,6 @@ const std = @import("std");
 const rl = @import("raylib");
 const windowBounds = @import("../main.zig").windowBounds;
 
-const wwBytes = @embedFile("ww.png");
-const atBytes = @embedFile("at.png");
-
 pub const Main = struct {
     const Self = @This();
 
@@ -26,10 +23,10 @@ pub const Main = struct {
     zero: rl.Vector2,
 
     pub fn init() Self {
-        const img_at = rl.loadImageFromMemory(".png", atBytes) catch unreachable;
+        const img_at = rl.loadImageFromMemory(".png", @embedFile("at.png")) catch unreachable;
         defer img_at.unload();
 
-        const img_ww = rl.loadImageFromMemory(".png", wwBytes) catch unreachable;
+        const img_ww = rl.loadImageFromMemory(".png", @embedFile("ww.png")) catch unreachable;
         defer img_ww.unload();
 
         const atw: f32 = @floatFromInt(img_at.width);

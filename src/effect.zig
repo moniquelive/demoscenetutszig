@@ -18,11 +18,11 @@ pub const Effect = union(enum) {
         inline for (std.meta.fields(Effect)) |field| {
             if (std.mem.eql(u8, field.name, name)) {
                 return switch (field.type) {
-                    Star2d => Effect{ .star2d = field.type.init() },
-                    Star3d => Effect{ .star3d = field.type.init() },
-                    Crossfade => Effect{ .crossfade = field.type.init() },
-                    Plasma => Effect{ .plasma = field.type.init() },
-                    Filters => Effect{ .filters = field.type.init() },
+                    // Star2d => Effect{ .star2d = field.type.init() },
+                    // Star3d => Effect{ .star3d = field.type.init() },
+                    // Crossfade => Effect{ .crossfade = field.type.init() },
+                    // Plasma => Effect{ .plasma = field.type.init() },
+                    // Filters => Effect{ .filters = field.type.init() },
                     Cyber1 => Effect{ .cyber1 = field.type.init() },
                     else => error.NotFound,
                 };

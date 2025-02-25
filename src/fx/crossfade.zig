@@ -4,16 +4,14 @@
 /// Outras interpolações: https://easings.net/
 const std = @import("std");
 const rl = @import("raylib");
+const Effect = @import("../effect.zig").Effect;
 const windowBounds = @import("../main.zig").windowBounds;
 
 pub const Main = struct {
     const Self = @This();
 
-    width: u32 = 800,
-    height: u32 = 600,
-
-    step: f32 = 0.015,
-    k: f32 = 0.0,
+    step: f32,
+    k: f32,
 
     at: rl.Texture2D,
     ww: rl.Texture2D,
@@ -22,7 +20,7 @@ pub const Main = struct {
     dst: rl.Rectangle,
     zero: rl.Vector2,
 
-    pub fn init() Self {
+    pub fn init(self: *Self) Effect {
         const img_at = rl.loadImageFromMemory(".png", @embedFile("at.png")) catch unreachable;
         defer img_at.unload();
 
@@ -37,15 +35,23 @@ pub const Main = struct {
         const w = 600.0 / ratio;
         const h = 600.0;
 
-        return Self{
-            .at = img_at.toTexture() catch unreachable,
-            .ww = img_ww.toTexture() catch unreachable,
-            .src = rl.Rectangle{ .x = 0, .y = 0, .width = atw, .height = ath },
-            .dst = rl.Rectangle{ .x = x, .y = y, .width = w, .height = h },
-            .zero = rl.Vector2.zero(),
+        self.at = img_at.toTexture() catch unreachable;
+        self.ww = img_ww.toTexture() catch unreachable;
+        self.src = rl.Rectangle{ .x = 0, .y = 0, .width = atw, .height = ath };
+        self.dst = rl.Rectangle{ .x = x, .y = y, .width = w, .height = h };
+        self.zero = rl.Vector2.zero();
+        self.step = 0.015;
+        self.k = 0.0;
+        return .{
+            .ptr = self,
+            .drawFn = draw,
+            .widthFn = width,
+            .heightFn = height,
         };
     }
-    pub fn draw(self: *Self) void {
+
+    pub fn draw(ptr: *anyopaque) void {
+        const self: *Self = @ptrCast(@alignCast(ptr));
         if (self.k < 0.0 or self.k > 1.0) {
             self.step *= -1;
         }
@@ -57,7 +63,15 @@ pub const Main = struct {
         rl.drawTexturePro(self.ww, self.src, self.dst, self.zero, 0, rl.Color.alpha(rl.Color.white, (1 - alpha)));
     }
 
-    fn easeInOutBack(t: f32) f32 {
+    pub fn width(_: *anyopaque) u32 {
+        return 800;
+    }
+
+    pub fn height(_: *anyopaque) u32 {
+        return 600;
+    }
+
+    inline fn easeInOutBack(t: f32) f32 {
         const c1 = 1.70158;
         const c2 = c1 * 1.525;
         if (t < 0.5) {

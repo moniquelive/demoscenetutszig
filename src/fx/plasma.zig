@@ -3,14 +3,12 @@
 /// https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_04_Per_Pixel_Control.shtml
 const std = @import("std");
 const rl = @import("raylib");
+const Effect = @import("../effect.zig").Effect;
 
 const pi_over_128 = std.math.pi / 128.0;
 
 pub const Main = struct {
     const Self = @This();
-
-    width: u32 = 320,
-    height: u32 = 200,
 
     bg: *const [64_000:0]u8,
     plasma1: [256_000]u8 = undefined,
@@ -26,17 +24,23 @@ pub const Main = struct {
         const cos = std.math.cos(y / (31.0 + 11.0 * std.math.sin(x / 57.0)));
         return @intFromFloat(64.0 + 63.0 * sin * cos);
     }
-    pub fn init() Self {
-        comptime var s = Self{ .bg = @embedFile("plasma.raw") };
+    pub fn init(self: *Self) Effect {
         for (0..400) |j| {
-            for (0..640) |i| s.plasma1[640 * j + i] = f1(@floatFromInt(i), @floatFromInt(j));
+            for (0..640) |i| self.plasma1[640 * j + i] = f1(@floatFromInt(i), @floatFromInt(j));
         }
         for (0..400) |j| {
-            for (0..640) |i| s.plasma2[640 * j + i] = f2(@floatFromInt(i), @floatFromInt(j));
+            for (0..640) |i| self.plasma2[640 * j + i] = f2(@floatFromInt(i), @floatFromInt(j));
         }
-        return s;
+        self.bg = @embedFile("plasma.raw");
+        return .{
+            .ptr = self,
+            .drawFn = draw,
+            .widthFn = width,
+            .heightFn = height,
+        };
     }
-    pub fn draw(self: *Self) void {
+    pub fn draw(ptr: *anyopaque) void {
+        const self: *Self = @ptrCast(@alignCast(ptr));
         // animation speed
         const time = rl.getTime() * 150;
 
@@ -68,5 +72,13 @@ pub const Main = struct {
                 rl.drawPixel(@intCast(i), @intCast(j), colors[c]);
             }
         }
+    }
+
+    pub fn width(_: *anyopaque) u32 {
+        return 320;
+    }
+
+    pub fn height(_: *anyopaque) u32 {
+        return 200;
     }
 };

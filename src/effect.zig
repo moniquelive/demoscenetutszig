@@ -6,46 +6,52 @@ const Plasma = @import("fx/plasma.zig").Main;
 const Filters = @import("fx/filters.zig").Main;
 const Cyber1 = @import("fx/cyber1.zig").Main;
 
-pub const Effect = union(enum) {
+const Effects = union(enum) {
     star2d: Star2d,
     star3d: Star3d,
     crossfade: Crossfade,
     plasma: Plasma,
     filters: Filters,
     cyber1: Cyber1,
+};
 
-    pub fn new(name: []const u8) !Effect {
-        inline for (std.meta.fields(Effect)) |field| {
+pub const Effect = struct {
+    const Self = @This();
+
+    ptr: *anyopaque,
+    drawFn: *const fn (ptr: *anyopaque) void,
+    widthFn: *const fn (ptr: *anyopaque) u32,
+    heightFn: *const fn (ptr: *anyopaque) u32,
+
+    pub fn new(alloc: std.mem.Allocator, name: []const u8) !Self {
+        inline for (std.meta.fields(Effects)) |field| {
             if (std.mem.eql(u8, field.name, name)) {
-                return switch (field.type) {
-                    // Star2d => Effect{ .star2d = field.type.init() },
-                    // Star3d => Effect{ .star3d = field.type.init() },
-                    // Crossfade => Effect{ .crossfade = field.type.init() },
-                    // Plasma => Effect{ .plasma = field.type.init() },
-                    // Filters => Effect{ .filters = field.type.init() },
-                    Cyber1 => Effect{ .cyber1 = field.type.init() },
-                    else => error.NotFound,
-                };
+                var fx = try alloc.create(field.type);
+                return fx.init();
             }
         }
         return error.NotFound;
     }
 
-    pub fn draw(effect: *Effect) void {
-        switch (effect.*) {
-            inline else => |*f| f.draw(),
+    pub fn free(self: *Self, alloc: std.mem.Allocator, name: []const u8) void {
+        inline for (std.meta.fields(Effects)) |field| {
+            if (std.mem.eql(u8, field.name, name)) {
+                const ptr: *field.type = @ptrCast(@alignCast(self.ptr));
+                alloc.destroy(ptr);
+                return;
+            }
         }
     }
 
-    pub fn width(effect: Effect) u32 {
-        return switch (effect) {
-            inline else => |f| return f.width,
-        };
+    pub fn draw(self: *Self) void {
+        return self.drawFn(self.ptr);
     }
 
-    pub fn height(effect: Effect) u32 {
-        return switch (effect) {
-            inline else => |f| return f.height,
-        };
+    pub fn width(self: Self) u32 {
+        return self.widthFn(self.ptr);
+    }
+
+    pub fn height(self: Self) u32 {
+        return self.heightFn(self.ptr);
     }
 };

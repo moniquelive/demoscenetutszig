@@ -25,12 +25,18 @@ pub fn main() !void {
     rl.setTargetFPS(60);
 
     //------------------------------------------------- create the effect ---
-    var buffer: [1024]u8 = undefined;
-    var ba = std.heap.FixedBufferAllocator.init(&buffer);
-    const args = try std.process.argsAlloc(ba.allocator());
-    defer std.process.argsFree(ba.allocator(), args);
-    const fxName = if (args.len > 1) args[1] else "cyber1";
-    var fx = try Effect.new(fxName);
+    var args = std.process.args();
+    _ = args.skip();
+    const fxName = args.next() orelse "filters";
+
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer if (gpa.deinit() == .leak) @panic("Memory Leaked");
+    const alloc = gpa.allocator();
+    var fx = Effect.new(alloc, fxName) catch {
+        std.debug.print("\n\n!!!\nEffect not found: {s}\n!!!\n\n", .{fxName});
+        return;
+    };
+    defer fx.free(alloc, fxName);
 
     //------------------------------------- create our off screen texture ---
     var target = try rl.loadRenderTexture(@intCast(fx.width()), @intCast(fx.height()));

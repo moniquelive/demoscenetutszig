@@ -1,28 +1,31 @@
 const std = @import("std");
 const rl = @import("raylib");
+const Effect = @import("../effect.zig").Effect;
 const rnd = std.crypto.random;
 
 pub const Main = struct {
     const Self = @This();
 
-    width: u32 = 320,
-    height: u32 = 200,
+    pixels: [320 * 200]Pixel,
+    t: f32,
 
-    pixels: [320 * 200]Pixel = undefined,
-    t: f32 = 0,
-
-    pub fn init() Self {
+    pub fn init(self: *Self) Effect {
         const bgImg = rl.loadImageFromMemory(".png", @embedFile("cyber1.png")) catch unreachable;
         defer bgImg.unload();
 
-        var s = Self{};
         for (0..200) |j| {
             for (0..320) |i| {
                 const color = bgImg.getColor(@intCast(i), @intCast(j));
-                s.pixels[320 * j + i] = Pixel.init(i, j, &color);
+                self.pixels[320 * j + i] = Pixel.init(i, j, &color);
             }
         }
-        return s;
+        self.t = 0;
+        return .{
+            .ptr = self,
+            .drawFn = draw,
+            .widthFn = width,
+            .heightFn = height,
+        };
     }
     fn update(self: *Self) void {
         self.t = @min(1, self.t + 0.005);
@@ -30,11 +33,20 @@ pub const Main = struct {
             pixel.update(self.t);
         }
     }
-    pub fn draw(self: *Self) void {
+    pub fn draw(ptr: *anyopaque) void {
+        const self: *Self = @ptrCast(@alignCast(ptr));
         if (self.t < 1) self.update();
         for (&self.pixels) |*pixel| {
             pixel.draw();
         }
+    }
+
+    pub fn width(_: *anyopaque) u32 {
+        return 320;
+    }
+
+    pub fn height(_: *anyopaque) u32 {
+        return 200;
     }
 };
 

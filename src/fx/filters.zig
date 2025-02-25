@@ -3,19 +3,17 @@
 // https://www.flipcode.com/archives/The_Art_of_Demomaking-Issue_05_Filters.shtml
 const std = @import("std");
 const rl = @import("raylib");
+const Effect = @import("../effect.zig").Effect;
 
 pub const Main = struct {
     const Self = @This();
 
-    width: u32 = 320,
-    height: u32 = 200,
-
     bg: rl.Image,
-    colors: [256]rl.Color = undefined,
-    flip: bool = true,
+    colors: [256]rl.Color,
+    flip: bool,
 
-    fire1: [64_000]u8 = [_]u8{0} ** 64_000,
-    fire2: [64_000]u8 = [_]u8{0} ** 64_000,
+    fire1: [64_000]u8,
+    fire2: [64_000]u8,
 
     inline fn shade_pal(colors: *[256]rl.Color, s: i32, e: i32, r1: i32, g1: i32, b1: i32, r2: i32, g2: i32, b2: i32) void {
         const d = e - s;
@@ -30,17 +28,27 @@ pub const Main = struct {
         }
     }
 
-    pub fn init() Self {
-        var s = Self{ .bg = rl.loadImageFromMemory(".png", @embedFile("filter.png")) catch unreachable };
-        shade_pal(&s.colors, 0, 23, 0, 0, 0, 0, 0, 127);
-        shade_pal(&s.colors, 24, 47, 0, 0, 127, 255, 0, 0);
-        shade_pal(&s.colors, 48, 63, 255, 0, 0, 255, 255, 0);
-        shade_pal(&s.colors, 64, 127, 255, 255, 0, 255, 255, 255);
-        shade_pal(&s.colors, 128, 255, 255, 255, 255, 255, 255, 255);
-        return s;
+    pub fn init(self: *Self) Effect {
+        shade_pal(&self.colors, 0, 23, 0, 0, 0, 0, 0, 127);
+        shade_pal(&self.colors, 24, 47, 0, 0, 127, 255, 0, 0);
+        shade_pal(&self.colors, 48, 63, 255, 0, 0, 255, 255, 0);
+        shade_pal(&self.colors, 64, 127, 255, 255, 0, 255, 255, 255);
+        shade_pal(&self.colors, 128, 255, 255, 255, 255, 255, 255, 255);
+
+        self.bg = rl.loadImageFromMemory(".png", @embedFile("filter.png")) catch unreachable;
+        self.flip = true;
+        self.fire1 = [_]u8{0} ** 64_000;
+        self.fire2 = [_]u8{0} ** 64_000;
+        return .{
+            .ptr = self,
+            .drawFn = draw,
+            .widthFn = width,
+            .heightFn = height,
+        };
     }
 
-    pub fn draw(self: *Self) void {
+    pub fn draw(ptr: *anyopaque) void {
+        const self: *Self = @ptrCast(@alignCast(ptr));
         defer self.flip = !self.flip;
         self.heat();
         self.blur_up();
@@ -56,6 +64,14 @@ pub const Main = struct {
         }
     }
 
+    pub fn width(_: *anyopaque) u32 {
+        return 320;
+    }
+
+    pub fn height(_: *anyopaque) u32 {
+        return 200;
+    }
+
     const rand = std.crypto.random;
     fn heat(self: *Self) void {
         var dst = if (self.flip) &self.fire1 else &self.fire2;
@@ -63,10 +79,9 @@ pub const Main = struct {
             const bg = self.bg.getColor(@intCast(@rem(i, 320)), @intCast(@divFloor(i, 320))).r;
             if (bg > dst[i]) dst[i] = rand.int(u8) & bg;
         }
-        const j = rand.intRangeAtMost(usize, 0, 512 - 1);
-        for (0..j) |_| {
-            dst[63040 + rand.intRangeAtMost(usize, 0, 960 - 1)] = 255;
-        }
+        const lines = 3 * 320;
+        const r = rand.intRangeAtMost(usize, 0, 512 - 1);
+        for (0..r) |_| dst[(64000 - lines) + rand.intRangeAtMost(usize, 0, lines - 1)] = 255;
     }
 
     fn blur_up(self: *Self) void {

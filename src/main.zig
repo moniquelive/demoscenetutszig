@@ -27,12 +27,12 @@ pub fn main() !void {
     //------------------------------------------------- create the effect ---
     var args = std.process.args();
     _ = args.skip();
-    const fxName = args.next() orelse "filters";
+    const fxName = args.next() orelse "bifilter";
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer if (gpa.deinit() == .leak) @panic("Memory Leaked");
     const alloc = gpa.allocator();
-    var fx = Effect.new(alloc, fxName) catch {
+    var fx = Effect.create(alloc, fxName) catch {
         std.debug.print("\n\n!!!\nEffect not found: {s}\n!!!\n\n", .{fxName});
         return;
     };

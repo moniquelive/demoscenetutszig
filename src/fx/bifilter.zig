@@ -2,8 +2,6 @@ const std = @import("std");
 const rl = @import("raylib");
 const Effect = @import("../effect.zig").Effect;
 
-const pi_over_128 = std.math.pi / 128.0;
-
 pub const Main = struct {
     const Self = @This();
 

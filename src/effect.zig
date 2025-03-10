@@ -8,6 +8,7 @@ const Effects = union(enum) {
     filters: @import("fx/filters.zig").Main,
     cyber1: @import("fx/cyber1.zig").Main,
     bifilter: @import("fx/bifilter.zig").Main,
+    bump: @import("fx/bump.zig").Main,
 };
 
 pub const Effect = struct {

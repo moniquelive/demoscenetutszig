@@ -27,7 +27,7 @@ pub fn main() !void {
     //------------------------------------------------- create the effect ---
     var args = std.process.args();
     _ = args.skip();
-    const fxName = args.next() orelse "bifilter";
+    const fxName = args.next() orelse "bump";
 
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer if (gpa.deinit() == .leak) @panic("Memory Leaked");
